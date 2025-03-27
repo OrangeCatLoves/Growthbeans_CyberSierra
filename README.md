@@ -36,37 +36,40 @@ This project is an AI-powered application that enables users to upload CSV/Excel
 
 ## Project Structure
 
-- **app.py:**  
+- **backend/app.py**  
   A Flask backend that handles file uploads, data previews, and communication with the OpenAI API.  
   - **Endpoints:**
     - `/upload`: Upload files.
     - `/files`: Retrieve a list of uploaded files.
     - `/view`: Retrieve the top N rows from the selected file.
     - `/ask`: Handle AI queries using the file data as context.
-  
-- **App.tsx:**  
+
+- **backend/requirements.txt**  
+  A list of Python dependencies (and their versions) required by the backend. This file makes it easy for other developers to install the exact versions of libraries needed.
+
+- **frontend/App.tsx**  
   A React frontend built with Material‑UI and ReCharts.  
   - Users can upload files, view file data, ask questions, and view both the AI response and a generated graph.
   - The frontend also implements local storage for prompt history, enabling users to quickly revisit past queries.
 
-## How to Use
-
-1. **Upload a File:**  
-   Click on the "Upload XLS/CSV File" button and choose your CSV or Excel file. Then click "Submit Upload".
-
-2. **Select and View Data:**  
-   Choose a file from the list of uploaded files, specify the number of rows to display (N), and click "View Data" to preview the top N rows.
-
-3. **Ask a Question:**  
-   Enter your query in the "Your Question" text field and click "Submit Question".  
-   The AI will respond with both a textual explanation and a graph that visualizes the response data.
-
-4. **View Prompt History:**  
-   The prompt history section displays your previous prompts along with a short snippet of the responses. Click on any history item to reload that prompt and its corresponding AI response.
-
 ## Setup and Installation
 
-### Backend Setup
-1. **Install required Python packages:**
-   ```bash
-   pip install flask pandas numpy openai python-dotenv flask-cors
+### 1. Clone the Repository
+```bash
+git clone https://github.com/yourusername/ai-powered-csv-excel-app.git
+cd ai-powered-csv-excel-app
+```
+
+### 2. cd backend
+
+### 3. pip install -r requirements.txt
+
+### 4. Create a .env file with your OpenAI API key
+
+### 5. Run the Flask backend: python app.py
+
+### 6. cd ../frontend
+
+### 7. npm install
+
+### 8. npm start
