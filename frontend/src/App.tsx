@@ -16,7 +16,11 @@ import {
   TableHead,
   TableRow,
   Paper,
-  Alert
+  Alert,
+  List,
+  ListItemButton,
+  ListItemText,
+  Divider
 } from '@mui/material';
 import { SelectChangeEvent } from '@mui/material/Select';
 import {
@@ -29,6 +33,12 @@ import {
   ResponsiveContainer
 } from 'recharts';
 
+interface PromptHistoryEntry {
+  prompt: string;
+  aiAnswer: string;
+  graphData: any[];
+}
+
 const App: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedSheet, setSelectedSheet] = useState<string>('');
@@ -40,6 +50,7 @@ const App: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [aiAnswer, setAiAnswer] = useState<string>(''); // For AI's text explanation
   const [graphData, setGraphData] = useState<any[]>([]); // For parsed graph data
+  const [promptHistory, setPromptHistory] = useState<PromptHistoryEntry[]>([]);
 
   // Fetch list of uploaded files from the backend
   const fetchUploadedFiles = async () => {
@@ -58,9 +69,20 @@ const App: React.FC = () => {
     }
   };
 
+  // Load prompt history from local storage on mount
   useEffect(() => {
     fetchUploadedFiles();
+    const storedHistory = localStorage.getItem('promptHistory');
+    if (storedHistory) {
+      setPromptHistory(JSON.parse(storedHistory));
+    }
   }, []);
+
+  const savePromptHistory = (entry: PromptHistoryEntry) => {
+    const updatedHistory = [entry, ...promptHistory];
+    setPromptHistory(updatedHistory);
+    localStorage.setItem('promptHistory', JSON.stringify(updatedHistory));
+  };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
@@ -182,6 +204,12 @@ const App: React.FC = () => {
           const parsedResponse = JSON.parse(data.answer);
           setAiAnswer(parsedResponse.text);
           setGraphData(parsedResponse.graphData);
+          // Save the prompt and response to local storage
+          savePromptHistory({
+            prompt,
+            aiAnswer: parsedResponse.text,
+            graphData: parsedResponse.graphData
+          });
         } catch (err) {
           setError('AI response is not valid JSON.');
           console.error('Error parsing AI response:', err);
@@ -194,6 +222,13 @@ const App: React.FC = () => {
       setError('Error calling AI');
       console.error('Error calling AI:', err);
     }
+  };
+
+  // When a user selects a prompt from history, load its data
+  const handleHistorySelect = (entry: PromptHistoryEntry) => {
+    setPrompt(entry.prompt);
+    setAiAnswer(entry.aiAnswer);
+    setGraphData(entry.graphData);
   };
 
   return (
@@ -324,6 +359,25 @@ const App: React.FC = () => {
           Submit Question
         </Button>
       </Box>
+
+      {/* Prompt History Section */}
+      {promptHistory.length > 0 && (
+        <Box sx={{ my: 2 }}>
+          <Typography variant="h6" gutterBottom>
+            Prompt History
+          </Typography>
+          <List>
+            {promptHistory.map((entry, index) => (
+              <React.Fragment key={index}>
+                <ListItemButton onClick={() => handleHistorySelect(entry)}>
+                  <ListItemText primary={entry.prompt} secondary={entry.aiAnswer.substring(0, 80) + '...'} />
+                </ListItemButton>
+                <Divider />
+              </React.Fragment>
+            ))}
+          </List>
+        </Box>
+      )}
 
       {/* AI Response Display */}
       {aiAnswer && (
