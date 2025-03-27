@@ -60,16 +60,34 @@ git clone https://github.com/yourusername/ai-powered-csv-excel-app.git
 cd ai-powered-csv-excel-app
 ```
 
-### 2. cd backend
+### 2. Change directory to backend backend
+```bash
+cd backend
+```
 
-### 3. pip install -r requirements.txt
+### 3. Install required Python packages
+```bash
+pip install -r requirements.txt
+```
 
 ### 4. Create a .env file with your OpenAI API key
 
-### 5. Run the Flask backend: python app.py
+### 5. Run the Flask backend
+```bash
+python app.py
+```
 
-### 6. cd ../frontend
+### 6. Change directory to frontend
+```bash
+cd ../frontend
+```
 
-### 7. npm install
+### 7. Install relevant dependencies
+```bash
+npm install
+```
 
-### 8. npm start
+### 8. Start the React application
+```bash
+npm start
+```
