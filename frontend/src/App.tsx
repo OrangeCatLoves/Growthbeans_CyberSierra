@@ -29,6 +29,7 @@ const App: React.FC = () => {
   const [viewData, setViewData] = useState<any[]>([]);
   const [columns, setColumns] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [aiAnswer, setAiAnswer] = useState<string>('');  // New state for AI answer
 
   // Fetch list of uploaded files from the backend
   const fetchUploadedFiles = async () => {
@@ -51,31 +52,26 @@ const App: React.FC = () => {
     fetchUploadedFiles();
   }, []);
 
-  // Handle file selection
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
       setSelectedFile(event.target.files[0]);
-      setError(null); // clear any previous errors
+      setError(null);
     }
   };
 
-  // File selection change handler
   const handleSheetChange = (event: SelectChangeEvent<string>) => {
     setSelectedSheet(event.target.value);
-    setError(null); // clear any previous errors
+    setError(null);
   };
 
-  // Handle N rows input change
   const handleNRowsChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setNRows(Number(event.target.value));
   };
 
-  // Handle prompt text change
   const handlePromptChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setPrompt(event.target.value);
   };
 
-  // Upload file to the backend and refresh the file list
   const handleUpload = async () => {
     if (!selectedFile) return;
     setError(null);
@@ -102,7 +98,6 @@ const App: React.FC = () => {
     }
   };
 
-  // Call the /view endpoint to get top N rows from the selected file
   const handleViewSheet = async () => {
     if (!selectedSheet) {
       setError('Please select a file first');
@@ -119,9 +114,8 @@ const App: React.FC = () => {
         const data = await response.json();
         console.log('Data returned:', data);
 
-        // If data is an array with rows
         if (Array.isArray(data) && data.length > 0) {
-          // Gather *all* keys from all rows (union) to avoid missing columns
+          // Gather all keys from all rows
           const allKeys = new Set<string>();
           data.forEach((row: any) => {
             Object.keys(row).forEach((key) => allKeys.add(key));
@@ -148,10 +142,42 @@ const App: React.FC = () => {
     }
   };
 
-  const handleAskQuestion = () => {
-    console.log('User prompt:', prompt);
+  // NEW: Send user prompt + selected file to the AI and store the answer
+  const handleAskQuestion = async () => {
+    setError(null);
+    if (!selectedSheet) {
+      setError('Please select a file first, then ask your question');
+      return;
+    }
+    if (!prompt.trim()) {
+      setError('Prompt cannot be empty');
+      return;
+    }
+  
+    try {
+      const response = await fetch('http://localhost:5000/ask', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt,
+          fileName: selectedSheet
+        })
+      });
+  
+      if (response.ok) {
+        const data = await response.json();
+        console.log('AI Response:', data.answer);
+        setAiAnswer(data.answer);  // Store the answer to display it
+      } else {
+        const errorData = await response.json();
+        setError(errorData.error || 'Failed to ask AI');
+      }
+    } catch (err) {
+      setError('Error calling AI');
+      console.error('Error calling AI:', err);
+    }
   };
-
+  
   return (
     <Container maxWidth="lg" sx={{ mt: 4 }}>
       {/* Error Alert */}
@@ -297,6 +323,16 @@ const App: React.FC = () => {
           Submit Question
         </Button>
       </Box>
+
+      {/* AI Response Display */}
+      {aiAnswer && (
+        <Box sx={{ my: 2 }}>
+          <Typography variant="h6" gutterBottom>
+            AI Response:
+          </Typography>
+          <Typography variant="body1">{aiAnswer}</Typography>
+        </Box>
+      )}
     </Container>
   );
 };
