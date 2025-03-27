@@ -56,8 +56,8 @@ This project is an AI-powered application that enables users to upload CSV/Excel
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/yourusername/ai-powered-csv-excel-app.git
-cd ai-powered-csv-excel-app
+git clone https://github.com/yourusername/Growthbeans_CyberSierra.git
+cd Growthbeans_CyberSierra
 ```
 
 ### 2. Change directory to backend backend
