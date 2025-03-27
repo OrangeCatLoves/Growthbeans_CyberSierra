@@ -19,6 +19,15 @@ import {
   Alert
 } from '@mui/material';
 import { SelectChangeEvent } from '@mui/material/Select';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+  ResponsiveContainer
+} from 'recharts';
 
 const App: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -29,7 +38,8 @@ const App: React.FC = () => {
   const [viewData, setViewData] = useState<any[]>([]);
   const [columns, setColumns] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [aiAnswer, setAiAnswer] = useState<string>('');  // New state for AI answer
+  const [aiAnswer, setAiAnswer] = useState<string>(''); // For AI's text explanation
+  const [graphData, setGraphData] = useState<any[]>([]); // For parsed graph data
 
   // Fetch list of uploaded files from the backend
   const fetchUploadedFiles = async () => {
@@ -142,7 +152,7 @@ const App: React.FC = () => {
     }
   };
 
-  // NEW: Send user prompt + selected file to the AI and store the answer
+  // Send user prompt and selected file to the AI and process the composite JSON response
   const handleAskQuestion = async () => {
     setError(null);
     if (!selectedSheet) {
@@ -167,7 +177,15 @@ const App: React.FC = () => {
       if (response.ok) {
         const data = await response.json();
         console.log('AI Response:', data.answer);
-        setAiAnswer(data.answer);  // Store the answer to display it
+        try {
+          // Parse the composite JSON answer
+          const parsedResponse = JSON.parse(data.answer);
+          setAiAnswer(parsedResponse.text);
+          setGraphData(parsedResponse.graphData);
+        } catch (err) {
+          setError('AI response is not valid JSON.');
+          console.error('Error parsing AI response:', err);
+        }
       } else {
         const errorData = await response.json();
         setError(errorData.error || 'Failed to ask AI');
@@ -177,16 +195,12 @@ const App: React.FC = () => {
       console.error('Error calling AI:', err);
     }
   };
-  
+
   return (
     <Container maxWidth="lg" sx={{ mt: 4 }}>
       {/* Error Alert */}
       {error && (
-        <Alert
-          severity="error"
-          onClose={() => setError(null)}
-          sx={{ mb: 2 }}
-        >
+        <Alert severity="error" onClose={() => setError(null)} sx={{ mb: 2 }}>
           {error}
         </Alert>
       )}
@@ -207,11 +221,7 @@ const App: React.FC = () => {
               onChange={handleFileChange}
             />
           </Button>
-          <Button
-            variant="outlined"
-            onClick={handleUpload}
-            disabled={!selectedFile}
-          >
+          <Button variant="outlined" onClick={handleUpload} disabled={!selectedFile}>
             Submit Upload
           </Button>
         </Box>
@@ -257,11 +267,7 @@ const App: React.FC = () => {
           sx={{ mb: 2 }}
           inputProps={{ min: 1, max: 100 }}
         />
-        <Button
-          variant="contained"
-          onClick={handleViewSheet}
-          disabled={!selectedSheet}
-        >
+        <Button variant="contained" onClick={handleViewSheet} disabled={!selectedSheet}>
           View Data
         </Button>
       </Box>
@@ -285,15 +291,10 @@ const App: React.FC = () => {
               </TableHead>
               <TableBody>
                 {viewData.map((row, rowIndex) => (
-                  <TableRow
-                    key={rowIndex}
-                    sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-                  >
+                  <TableRow key={rowIndex} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
                     {columns.map((col) => (
                       <TableCell key={col}>
-                        {row[col] !== undefined && row[col] !== null
-                          ? String(row[col])
-                          : 'Empty'}
+                        {row[col] !== undefined && row[col] !== null ? String(row[col]) : 'Empty'}
                       </TableCell>
                     ))}
                   </TableRow>
@@ -331,6 +332,24 @@ const App: React.FC = () => {
             AI Response:
           </Typography>
           <Typography variant="body1">{aiAnswer}</Typography>
+        </Box>
+      )}
+
+      {/* Graph Display Section */}
+      {graphData.length > 0 && (
+        <Box sx={{ mt: 4 }}>
+          <Typography variant="h6" gutterBottom>
+            Generated Graph:
+          </Typography>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={graphData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="x" />
+              <YAxis />
+              <Tooltip />
+              <Bar dataKey="y" fill="#8884d8" />
+            </BarChart>
+          </ResponsiveContainer>
         </Box>
       )}
     </Container>

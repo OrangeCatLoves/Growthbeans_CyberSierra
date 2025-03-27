@@ -73,10 +73,8 @@ def view_file():
         # Get top n rows
         df_top = df.head(n)
 
-        # Replace NaN with empty string or None so it's valid JSON
+        # Replace NaN with None so it's valid JSON
         df_top = df_top.replace({np.nan: None})
-        # Alternatively, df_top = df_top.fillna("")
-
         data = df_top.to_dict(orient='records')
         print("Returning data:", data)  # Debug
         return jsonify(data), 200
@@ -120,7 +118,13 @@ def ask():
         messages = [
             {
                 "role": "system",
-                "content": "You are a helpful assistant. Use the following CSV data as context:\n" + csv_context
+                "content": (
+                    "You are a helpful assistant. Use the following CSV data as context:\n"
+                    + csv_context +
+                    "\nWhen answering, please provide your response as valid JSON containing two keys: "
+                    "\"text\" for your plain text explanation, and \"graphData\" for a JSON array of objects with keys \"x\" and \"y\" for graphing. "
+                    "Do not include any extra text."
+                )
             },
             {
                 "role": "user",
@@ -143,6 +147,7 @@ def ask():
 
 if __name__ == '__main__':
     app.run(debug=True)
+
 
 
 # @app.route('/view', methods=['GET'])
